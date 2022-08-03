@@ -1,8 +1,10 @@
-import { posts } from '../data';
-import { Post } from './Post';
+import { usePosts } from '../state';
+import { PostComp } from './Post';
 
 export function Posts() {
-	const postsDivs = posts.map((post) => <Post post={post} />);
+	const posts = usePosts();
+
+	const postsDivs = posts.map((post) => <PostComp key={post.id} post={post} />);
 
 	return (
 		<div className='posts' id=''>

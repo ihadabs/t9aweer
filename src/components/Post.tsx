@@ -1,11 +1,37 @@
+import { Post } from '@prisma/client';
 import { FiBookmark, FiHeart, FiMessageCircle, FiMoreHorizontal, FiSend } from 'react-icons/fi';
-import { IPost } from '../data';
+import { useDispatch } from 'react-redux';
+
+import { updatePost, userMoved, useUserId } from '../state';
 
 interface PostProps {
-	post: IPost;
+	post: Post;
 }
 
-export function Post({ post }: PostProps) {
+export function PostComp({ post }: PostProps) {
+	const userId = useUserId() ?? '';
+	const isLiked = post.likes.includes(userId);
+	const heartIconClasses = isLiked ? 'icon heart liked' : 'icon heart';
+	const dispatch = useDispatch();
+
+	function toggleLike() {
+		if (isLiked) {
+			const action = updatePost({
+				...post,
+				likes: post.likes.filter((id: any) => id !== userId),
+			});
+			dispatch(action);
+		} else {
+			const action = updatePost({
+				...post,
+				likes: [...post.likes, userId],
+			});
+			dispatch(action);
+		}
+		const action2 = userMoved();
+		dispatch(action2);
+	}
+
 	return (
 		<div className='post'>
 			<div className='header'>
@@ -17,7 +43,10 @@ export function Post({ post }: PostProps) {
 			<img src={post.imageUrl} alt='' />
 			<div className='footer'>
 				<div className='icons'>
-					<FiHeart className='icon heart' size={40} />
+					<div>
+						<FiHeart onClick={toggleLike} className={heartIconClasses} size={40} />
+						{post.likes.length}
+					</div>
 					<FiMessageCircle className='icon' size={40} />
 					<FiSend className='icon' size={40} />
 					<div className='spacer'></div>
