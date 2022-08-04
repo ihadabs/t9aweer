@@ -25,3 +25,10 @@ model Post {
   username      String
   userAvatarUrl String
 }
+
+model Comment {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  content  String
+  username String
+  post_id  String
+}

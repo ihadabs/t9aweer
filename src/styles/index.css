@@ -127,3 +127,19 @@ body {
 	align-items: center;
 	gap: 16px;
 }
+
+.comment-container {
+	padding: 8px 12px 24px;
+	display: flex;
+	gap: 12px;
+	align-items: center;
+}
+
+.comment-container .username {
+	font-size: 14px;
+	
+}
+.comment-container .content {
+	font-size: 14px;
+	color: grey;
+}

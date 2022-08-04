@@ -1,8 +1,12 @@
-import { Blog, Post } from '@prisma/client';
+import { Blog, Comment, Post } from '@prisma/client';
 import { cloneDeep } from 'lodash';
 import { useSelector } from 'react-redux';
 import { createStore } from 'redux';
 import { composeWithDevTools } from 'redux-devtools-extension';
+import { persistReducer, persistStore } from 'redux-persist';
+// @ts-ignore
+import storage from 'redux-persist/lib/storage';
+
 import { initialPosts } from './data';
 
 // Redux
@@ -11,11 +15,12 @@ import { initialPosts } from './data';
 interface AppState {
 	userId: string | null;
 	posts: Post[];
+	comments: Comment[];
 	blogs: Blog[];
 	lastMovedDate: Date;
 }
 interface IAction<X> {
-	type: 'ADD_POST' | 'DELETE_POST' | 'UPDATE_POST' | 'USER_MOVED';
+	type: 'ADD_POST' | 'DELETE_POST' | 'UPDATE_POST' | 'USER_MOVED' | 'ADD_COMMENT';
 	payload: X;
 }
 
@@ -23,6 +28,7 @@ interface IAction<X> {
 const initialState: AppState = {
 	userId: null,
 	posts: initialPosts,
+	comments: [],
 	blogs: [],
 	lastMovedDate: new Date(),
 };
@@ -45,6 +51,9 @@ function stateReducer(oldState: AppState = initialState, action: IAction<any>): 
 			const index = oldState.posts.findIndex((p) => p.id === action.payload.id);
 			if (index === -1) return oldState;
 			newState.posts[index] = action.payload;
+			return newState;
+		case 'ADD_COMMENT':
+			newState.comments.push(action.payload);
 			return newState;
 		default:
 			return oldState;
@@ -78,10 +87,16 @@ export function updatePost(post: Post): IAction<Post> {
 	};
 }
 
-/// Selector
+export function addComment(comment: Comment): IAction<Comment> {
+	return {
+		type: 'ADD_COMMENT',
+		payload: comment,
+	};
+}
+
+/// Selectors
 export function usePosts(): Post[] {
-	const posts = useSelector<AppState, Post[]>((state) => state.posts);
-	return posts;
+	return useSelector<AppState, Post[]>((state) => state.posts);
 }
 
 export function useBlogs(): Blog[] {
@@ -89,10 +104,19 @@ export function useBlogs(): Blog[] {
 }
 
 export function useUserId(): string | null {
-	const userId = useSelector<AppState, string | null>((state) => state.userId);
-	return userId;
+	return useSelector<AppState, string | null>((state) => state.userId);
+}
+
+export function usePostComments(postId: string): Comment[] {
+	return useSelector<AppState, Comment[]>((state) => {
+		return state.comments.filter((comment) => comment.post_id === postId);
+	});
 }
 
 /// Store
 
-export const store = createStore(stateReducer, composeWithDevTools());
+const persistConfig = { key: 'root', storage };
+const persistedReducer = persistReducer(persistConfig, stateReducer);
+
+export const store = createStore(persistedReducer, composeWithDevTools());
+export const persistor = persistStore(store);
